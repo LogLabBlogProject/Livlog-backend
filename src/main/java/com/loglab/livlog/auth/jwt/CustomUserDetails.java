@@ -2,11 +2,9 @@ package com.loglab.livlog.auth.jwt;
 
 import com.loglab.livlog.user.entity.User;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
@@ -31,7 +29,9 @@ public class CustomUserDetails implements UserDetails, OidcUser {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        return Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
     }
 
     public String getRole() {
@@ -87,12 +87,12 @@ public class CustomUserDetails implements UserDetails, OidcUser {
 
     @Override
     public OidcUserInfo getUserInfo() {
-        return null;
+        return null; // 필요시 구현
     }
 
     @Override
-    public OidcIdToken getIdToken() {
-        return null;
+    public org.springframework.security.oauth2.core.oidc.OidcIdToken getIdToken() {
+        return null; // 필요시 구현
     }
 
     @Override

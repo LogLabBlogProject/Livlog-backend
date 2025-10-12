@@ -48,4 +48,13 @@ public class PostReadService {
         return postRepository.searchBy(title, content, sCreatedDate, eCreatedDate, sUpdatedDate, eUpdatedDate)
                 .stream().map(PostSimpleResponseDto::new).toList();
     }
+
+    /** 특정 사용자(userId) 기준 게시글 목록 조회 */
+    public List<PostSimpleResponseDto> findByUserId(Long userId) {
+        return postRepository.findByUserId(userId)
+                .stream()
+                .map(PostSimpleResponseDto::new)
+                .toList();
+    }
+
 }

@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class CustomOAuth2AuthenticationSuccessHandler implements com.loglab.livlog.auth.oauth.handler.AuthenticationSuccessHandler {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenRepository jwtTokenRepository;
 
@@ -49,15 +48,18 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         // TODO: 토큰 정보 확인 후 존재하면 갱신, 존재하지 않으면 생성
         JwtToken jwtToken = jwtTokenRepository.findByUserAndDeviceInfo_DeviceId(user, deviceId)
-                .map((token) -> token.update(JwtTokenUpdateRequestDto.builder()
-                        .deviceInfo(deviceInfo)
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .accessTokenIssuedAt(accessTokenClaims.getIssuedAt().toInstant())
-                        .accessTokenExpiresAt(accessTokenClaims.getExpiration().toInstant())
-                        .refreshTokenIssuedAt(refreshTokenClaims.getIssuedAt().toInstant())
-                        .refreshTokenExpiresAt(refreshTokenClaims.getExpiration().toInstant())
-                        .build()))
+                .map((token) -> {
+                    JwtToken update = token.update(JwtTokenUpdateRequestDto.builder()
+                            .deviceInfo(deviceInfo)
+                            .accessToken(accessToken)
+                            .refreshToken(refreshToken)
+                            .accessTokenIssuedAt(accessTokenClaims.getIssuedAt().toInstant())
+                            .accessTokenExpiresAt(accessTokenClaims.getExpiration().toInstant())
+                            .refreshTokenIssuedAt(refreshTokenClaims.getIssuedAt().toInstant())
+                            .refreshTokenExpiresAt(refreshTokenClaims.getExpiration().toInstant())
+                            .build());
+                    return update;
+                })
                 .orElseGet(() -> JwtToken.builder()
                         .user(user)
                         .deviceInfo(deviceInfo)
@@ -69,7 +71,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                         .refreshTokenExpiresAt(refreshTokenClaims.getExpiration().toInstant())
                         .build());
 
-        /* TODO: JWT 토큰 및 디바이스 정보 저장 */
+        /* JWT 토큰 및 디바이스 정보 저장 */
         printLog(jwtToken, deviceInfo);
         jwtTokenRepository.save(jwtToken);
         CommonResponse<?> successResponse = CommonResponse.success(
@@ -79,17 +81,14 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                         .build()
         );
 
-        // TODO: 추후 HttpOnly 쿠키 + CSRF 보완 필요
-        // NOTE: OAuth2 Google 테스트 URL: http://localhost:8080/oauth2/authorization/google */
         String json = new ObjectMapper().writeValueAsString(successResponse);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write(json);
-        // response.sendRedirect("/");
     }
 
-    /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private DeviceInfo getDeviceInfo(HttpServletRequest request) {
         return DeviceInfo.builder()
                 .deviceId(getDeviceId(request))
@@ -107,9 +106,9 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
     private DeviceInfo.DeviceType getDeviceType(HttpServletRequest request) {
         String userAgent = request.getHeader(HttpHeaders.USER_AGENT).toLowerCase();
-        return !userAgent.contains("mobile") ? DeviceInfo.DeviceType.WEB :
-                userAgent.contains("android") ? DeviceInfo.DeviceType.ANDROID :
-                        DeviceInfo.DeviceType.IOS;
+        if (!userAgent.contains("mobile")) return DeviceInfo.DeviceType.WEB;
+        if (userAgent.contains("android")) return DeviceInfo.DeviceType.ANDROID;
+        return DeviceInfo.DeviceType.IOS;
     }
 
     private String getDeviceName(HttpServletRequest request) {
@@ -135,48 +134,46 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         return UUID.nameUUIDFromBytes(raw.getBytes(StandardCharsets.UTF_8)).toString();
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private String detectOS(String userAgent) {
-        return userAgent == null || userAgent.isBlank() ? "Unknown OS" :
-                switch (userAgent.toLowerCase()) {
-                    case String s when s.contains("windows nt 11") -> "Windows 11";
-                    case String s when s.contains("windows nt 10") -> "Windows 10";
-                    case String s when s.contains("windows nt 6.1") -> "Windows 7";
-                    case String s when s.contains("mac os x") -> "Mac OS";
-                    case String s when s.contains("android") -> "Android";
-                    case String s when s.contains("iphone") -> "iOS";
-                    case String s when s.contains("ipad") -> "iPadOS";
-                    case String s when s.contains("linux") -> "Linux";
-                    default -> "Unknown OS";
-                };
+        if (userAgent == null || userAgent.isBlank()) return "Unknown OS";
+        String ua = userAgent.toLowerCase();
+        if (ua.contains("windows nt 11")) return "Windows 11";
+        else if (ua.contains("windows nt 10")) return "Windows 10";
+        else if (ua.contains("windows nt 6.1")) return "Windows 7";
+        else if (ua.contains("mac os x")) return "Mac OS";
+        else if (ua.contains("android")) return "Android";
+        else if (ua.contains("iphone")) return "iOS";
+        else if (ua.contains("ipad")) return "iPadOS";
+        else if (ua.contains("linux")) return "Linux";
+        else return "Unknown OS";
     }
 
     private String detectDevice(String userAgent) {
-        return userAgent == null || userAgent.isBlank() ? "Unknown Device" :
-                switch (userAgent.toLowerCase()) {
-                    case String s when s.contains("samsung") -> "Samsung Galaxy";
-                    case String s when s.contains("sm-") -> "Samsung Device";
-                    case String s when s.contains("pixel") -> "Google Pixel";
-                    case String s when s.contains("iphone") -> "iPhone";
-                    case String s when s.contains("ipad") -> "iPad";
-                    case String s when s.contains("macintosh") -> "Mac";
-                    case String s when s.contains("windows") -> "PC";
-                    default -> "Unknown Device";
-                };
+        if (userAgent == null || userAgent.isBlank()) return "Unknown Device";
+        String ua = userAgent.toLowerCase();
+        if (ua.contains("samsung")) return "Samsung Galaxy";
+        else if (ua.contains("sm-")) return "Samsung Device";
+        else if (ua.contains("pixel")) return "Google Pixel";
+        else if (ua.contains("iphone")) return "iPhone";
+        else if (ua.contains("ipad")) return "iPad";
+        else if (ua.contains("macintosh")) return "Mac";
+        else if (ua.contains("windows")) return "PC";
+        else return "Unknown Device";
     }
 
     private String detectBrowser(String userAgent) {
-        return userAgent == null || userAgent.isBlank() ? "Unknown Browser" :
-                switch (userAgent.toLowerCase()) {
-                    case String s when s.contains("edg/") -> "Edge";
-                    case String s when s.contains("chrome/") -> !s.contains("mobile") ? "Chrome" : "Chrome Mobile";
-                    case String s when s.contains("safari/") && !s.contains("chrome") -> "Safari";
-                    case String s when s.contains("firefox/") -> "Firefox";
-                    default -> "Unknown Browser";
-                };
+        if (userAgent == null || userAgent.isBlank()) return "Unknown Browser";
+        String ua = userAgent.toLowerCase();
+        if (ua.contains("edg/")) return "Edge";
+        else if (ua.contains("chrome/") && !ua.contains("mobile")) return "Chrome";
+        else if (ua.contains("chrome/") && ua.contains("mobile")) return "Chrome Mobile";
+        else if (ua.contains("safari/") && !ua.contains("chrome")) return "Safari";
+        else if (ua.contains("firefox/")) return "Firefox";
+        else return "Unknown Browser";
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private void printLog(JwtToken jwtToken, DeviceInfo deviceInfo) {
         log.info("Device Info: {}", deviceInfo.toString());
         log.info("Device ID: {}", deviceInfo.getDeviceId());

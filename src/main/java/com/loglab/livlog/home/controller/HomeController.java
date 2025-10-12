@@ -1,6 +1,7 @@
 package com.loglab.livlog.home.controller;
 
 import com.loglab.livlog.global.dto.CommonResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Default", description = "기본 API")
 public class HomeController {
 
     @GetMapping("/")
