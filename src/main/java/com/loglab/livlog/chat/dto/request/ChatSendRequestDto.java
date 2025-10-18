@@ -1,5 +1,6 @@
-package com.loglab.livlog.chat.dto;
+package com.loglab.livlog.chat.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
