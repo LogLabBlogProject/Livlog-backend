@@ -3,6 +3,8 @@ package com.loglab.livlog.chat.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loglab.livlog.chat.dto.response.ChatPayload;
 import com.loglab.livlog.chat.entity.ChatMessage;
+import com.loglab.livlog.chat.exception.ChatRoomAccessDeniedException;
+import com.loglab.livlog.chat.repository.ChatParticipantRepository;
 import com.loglab.livlog.chat.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +20,15 @@ import java.time.Instant;
 public class ChatService {
 
     private final ChatMessageRepository messageRepository;
+    private final ChatParticipantRepository participantRepository;
     private final StringRedisTemplate redisTemplate;
     private final ChannelTopic chatTopic;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ChatMessage saveMessage(Long roomId, Long senderId, String senderName, String body) {
+    public ChatMessage saveMessage(Long roomId, Long senderId, String body) {
+        // TODO: 실제 구현에서는 UserService를 통해 사용자 이름 조회
+        String senderName = "user_" + senderId; // 임시 구현
+        
         ChatMessage msg = ChatMessage.builder()
                 .roomId(roomId)
                 .senderId(senderId)
@@ -49,6 +55,16 @@ public class ChatService {
             log.info("Published message {} to Redis topic {}", saved.getId(), chatTopic.getTopic());
         } catch (Exception e) {
             log.error("Redis publish error", e);
+        }
+    }
+
+    /**
+     * 사용자가 해당 채팅방의 참여자인지 검증. 아니면 AccessDenied 예외 발생.
+     */
+    public void assertParticipant(Long memberId, Long roomId) {
+        boolean isParticipant = participantRepository.existsByRoomIdAndMemberId(roomId, memberId);
+        if (!isParticipant) {
+            throw new ChatRoomAccessDeniedException(roomId, memberId);
         }
     }
 }
