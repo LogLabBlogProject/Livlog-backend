@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -48,10 +49,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/", "/login", "/error",
-                                "/oauth2/**", "/login/oauth2/**"       // OAuth2 엔드포인트 허용
+                                "/",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/api-docs/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/login",
+                                "/error",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
+                                "/api/v1/**"
                         ).permitAll()
-                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -62,12 +71,12 @@ public class SecurityConfig {
 
         // 등록 정보가 있을 때만 소셜 로그인 활성화
         if (clientRepo != null && hasAnyClient(clientRepo)) {
-            http.oauth2Login(oauth2 -> oauth2
+            HttpSecurity httpSecurity = http.oauth2Login(oauth2 -> oauth2
                     .userInfoEndpoint(userInfo -> userInfo
                             .userService(customOAuth2UserService)
                             .oidcUserService(customOAuth2OidcUserService)
                     )
-                    .successHandler(customOAuth2AuthenticationSuccessHandler)
+                    .successHandler((AuthenticationSuccessHandler) customOAuth2AuthenticationSuccessHandler)
                     .failureHandler(customOAuth2AuthenticationFailureHandler)
             );
         }
