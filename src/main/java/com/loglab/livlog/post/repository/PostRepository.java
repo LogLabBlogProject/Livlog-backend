@@ -25,4 +25,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                         @Param("eCreatedAt") LocalDateTime eCreatedAt,
                         @Param("sUpdatedAt") LocalDateTime sUpdatedAt,
                         @Param("eUpdatedAt") LocalDateTime eUpdatedAt);
+
+    List<Post> findByUserId(Long userId);
 }

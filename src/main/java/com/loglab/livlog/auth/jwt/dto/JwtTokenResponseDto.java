@@ -14,4 +14,7 @@ public class JwtTokenResponseDto {
     private String tokenType = "Bearer";
     private String accessToken;
     private String refreshToken;
+
+    public JwtTokenResponseDto(String accessToken, String refreshToken) {
+    }
 }

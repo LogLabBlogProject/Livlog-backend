@@ -19,16 +19,24 @@ public class JwtTokenProvider {
     private String issuer;
     @Value("${jwt.secret}")
     private String secret;
-    @Value("${jwt.access.expiration}")
-    private Long accessTokenExpirationInMilliseconds;
-    @Value("${jwt.refresh.expiration}")
-    private Long refreshTokenExpirationInMilliseconds;
+//    @Value("${jwt.access.expiration}")
+//    private Long accessTokenExpirationInMilliseconds;
+//    @Value("${jwt.refresh.expiration}")
+//    private Long refreshTokenExpirationInMilliseconds;
+
+    private final Long accessTokenExpirationInMilliseconds = 3600000L;
+    private final Long refreshTokenExpirationInMilliseconds = 86400000L;
 
     private SecretKey secretKey;
 
     @PostConstruct
     public void init() {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+        if(secret == null || secret.length() < 32){
+            secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512); // 자동 안전 키 생성
+            log.warn("JWT secret key was too short; generated a new secure key: {}", secretKey);
+        } else {
+            secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
