@@ -87,11 +87,41 @@ public class PostController {
 
     @Operation(
             summary = "유저ID로 유저 포스트 조회",
-            description = ""
+            description = "특정 사용자의 모든 포스트를 조회합니다"
     )
     @GetMapping("/api/v1/post/user/{userId}")
     public ResponseEntity<CommonResponse<?>> getPostsByUser(@PathVariable Long userId) {
         List<PostSimpleResponseDto> responseDto = postReadService.findByUserId(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.success(responseDto));
+    }
+
+    @Operation(
+            summary = "카테고리ID로 포스트 조회",
+            description = "특정 카테고리의 모든 포스트를 조회합니다"
+    )
+    @GetMapping("/api/v1/post/category/{categoryId}")
+    public ResponseEntity<CommonResponse<?>> getPostsByCategory(@PathVariable Long categoryId) {
+        List<PostSimpleResponseDto> responseDto = postReadService.findByCategoryId(categoryId);
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.success(responseDto));
+    }
+
+    @Operation(
+            summary = "태그ID로 포스트 조회",
+            description = "특정 태그가 포함된 모든 포스트를 조회합니다"
+    )
+    @GetMapping("/api/v1/post/tag/{tagId}")
+    public ResponseEntity<CommonResponse<?>> getPostsByTag(@PathVariable Long tagId) {
+        List<PostSimpleResponseDto> responseDto = postReadService.findByTagId(tagId);
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.success(responseDto));
+    }
+
+    @Operation(
+            summary = "최신 포스트 조회",
+            description = "최신 포스트를 생성일 기준 내림차순으로 조회합니다"
+    )
+    @GetMapping("/api/v1/post/latest")
+    public ResponseEntity<CommonResponse<?>> getLatestPosts() {
+        List<PostSimpleResponseDto> responseDto = postReadService.findLatestPosts();
         return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.success(responseDto));
     }
 
