@@ -57,4 +57,28 @@ public class PostReadService {
                 .toList();
     }
 
+    /** 카테고리별 게시글 목록 조회 */
+    public List<PostSimpleResponseDto> findByCategoryId(Long categoryId) {
+        return postRepository.findByCategoryId(categoryId)
+                .stream()
+                .map(PostSimpleResponseDto::new)
+                .toList();
+    }
+
+    /** 태그별 게시글 목록 조회 */
+    public List<PostSimpleResponseDto> findByTagId(Long tagId) {
+        return postRepository.findByTagId(tagId)
+                .stream()
+                .map(PostSimpleResponseDto::new)
+                .toList();
+    }
+
+    /** 최신 게시글 목록 조회 */
+    public List<PostSimpleResponseDto> findLatestPosts() {
+        return postRepository.findLatestPosts()
+                .stream()
+                .map(PostSimpleResponseDto::new)
+                .toList();
+    }
+
 }
