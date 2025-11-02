@@ -21,6 +21,7 @@ public class Category {
 
     private String name;
 
+    @Builder.Default
     private Boolean activated = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,5 +37,13 @@ public class Category {
     public void deactivate() {
         this.activated = false;
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }
