@@ -51,4 +51,14 @@ public class User {
         this.profile = oAuth2UserInfo.getImageUrl();
         return this;
     }
+
+    public void updateProfile(String nickname, String username, String profile) {
+        if (nickname != null) this.nickname = nickname;
+        if (username != null) this.username = username;
+        if (profile != null) this.profile = profile;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }
