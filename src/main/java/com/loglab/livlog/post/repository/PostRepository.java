@@ -27,4 +27,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                         @Param("eUpdatedAt") LocalDateTime eUpdatedAt);
 
     List<Post> findByUserId(Long userId);
+
+    List<Post> findByCategoryId(Long categoryId);
+
+    @Query("SELECT p FROM Post p JOIN p.tags t WHERE t.id = :tagId")
+    List<Post> findByTagId(@Param("tagId") Long tagId);
+
+    @Query("SELECT p FROM Post p ORDER BY p.createdAt DESC")
+    List<Post> findLatestPosts();
 }
