@@ -36,5 +36,21 @@ out/
 ### VS Code ###
 .vscode/
 
-*.properties
-*.yml
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
+
+### Application Properties (환경별 설정 파일) ###
+application-prod.properties
+application-prod.yml
+application-local.properties
+application-local.yml
+
+### Upload Files ###
+uploads/
+*.log
+
+### OS ###
+.DS_Store
+Thumbs.db
