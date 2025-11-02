@@ -1,4 +1,5 @@
 package com.loglab.livlog.post.entity;
+import com.loglab.livlog.category.entity.Category;
 import com.loglab.livlog.tag.entity.Tag;
 import com.loglab.livlog.user.entity.User;
 import com.loglab.livlog.post.dto.PostUpdateRequestDto;
@@ -25,8 +26,12 @@ public class Post {
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)  // ✅ FK 매핑
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @ManyToMany
     @JoinTable(
@@ -34,6 +39,7 @@ public class Post {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
+    @Builder.Default
     private Set<Tag> tags = new HashSet<>();
 
     @CreationTimestamp
